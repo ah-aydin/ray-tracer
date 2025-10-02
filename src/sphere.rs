@@ -1,6 +1,5 @@
 use crate::hittable::HitRecord;
 use crate::hittable::Hittable;
-use crate::interval;
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::vec::Point3;

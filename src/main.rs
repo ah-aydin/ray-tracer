@@ -1,3 +1,4 @@
+mod camera;
 mod hittable;
 mod interval;
 mod ray;
@@ -15,8 +16,8 @@ use vec::Color3;
 use vec::Point3;
 use vec::Vec3;
 
-fn ray_color(ray: &Ray, hittable_list: &HittableList) -> Color3 {
-    if let Some(hit_record) = hittable_list.hit(ray, Interval::new(0.0, f64::MAX)) {
+fn ray_color(ray: &Ray, objects: &HittableList) -> Color3 {
+    if let Some(hit_record) = objects.hit(ray, Interval::new(0.0, f64::MAX)) {
         let normal = hit_record.normal;
         return Color3::new(normal.x, normal.y, normal.z);
     }
