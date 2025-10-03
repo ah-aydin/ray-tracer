@@ -6,6 +6,8 @@ use std::ops::Mul;
 use std::ops::Sub;
 
 use crate::interval::Interval;
+use crate::utils::random_f64;
+use crate::utils::random_percentage;
 
 pub type Point3 = Vec3;
 pub type Color3 = Vec3;
@@ -32,6 +34,42 @@ impl Vec3 {
             y: 0.0,
             z: 0.0,
         }
+    }
+
+    pub fn random() -> Self {
+        Self {
+            x: random_percentage(),
+            y: random_percentage(),
+            z: random_percentage(),
+        }
+    }
+
+    pub fn random_interval(min: f64, max: f64) -> Self {
+        assert!(min < max);
+        Self {
+            x: random_f64(min, max),
+            y: random_f64(min, max),
+            z: random_f64(min, max),
+        }
+    }
+
+    pub fn random_unit() -> Self {
+        loop {
+            let p = Vec3::random_interval(-1.0, 1.0);
+            let lensq = p.squared_length();
+            if 1e-169 < lensq && lensq <= 1.0 {
+                return p.unit();
+            }
+        }
+    }
+
+    pub fn random_on_hemisphere(normal: Vec3) -> Self {
+        let on_unit_sphere = Vec3::random_unit();
+        if on_unit_sphere.dot(&normal) > 0.0 {
+            // In the same hemisphere as the normal
+            return on_unit_sphere;
+        }
+        Vec3::zero() - on_unit_sphere
     }
 
     pub fn length(&self) -> f64 {

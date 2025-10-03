@@ -18,10 +18,16 @@ pub struct Camera {
     pixel_delta_v: Vec3,
     samples_per_pixel: usize,
     pixel_sample_scale: f64,
+    max_depth: usize,
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: usize, samples_per_pixel: usize) -> Camera {
+    pub fn new(
+        aspect_ratio: f64,
+        image_width: usize,
+        samples_per_pixel: usize,
+        max_depth: usize,
+    ) -> Camera {
         let image_height = ((image_width as f64 / aspect_ratio) as usize).max(1);
         let aspect_ratio = image_width as f64 / image_height as f64;
 
@@ -53,6 +59,7 @@ impl Camera {
             pixel_delta_v,
             samples_per_pixel,
             pixel_sample_scale: 1.0 / (samples_per_pixel as f64),
+            max_depth,
         }
     }
 
@@ -69,7 +76,7 @@ impl Camera {
                 let mut pixel_color = Color3::zero();
                 for _ in 0..self.samples_per_pixel {
                     let ray = self.get_ray(i, j);
-                    pixel_color = pixel_color + self.ray_color(&ray, &objects);
+                    pixel_color = pixel_color + self.ray_color(ray, &objects, self.max_depth);
                 }
                 pixel_color = pixel_color * self.pixel_sample_scale;
                 pixel_color.write(&mut image_data);
@@ -93,10 +100,15 @@ impl Camera {
         Ray::new(self.center, ray_direction)
     }
 
-    fn ray_color(&self, ray: &Ray, objects: &HittableList) -> Color3 {
-        if let Some(hit_record) = objects.hit(ray, Interval::new(0.0, f64::MAX)) {
-            let normal = hit_record.normal;
-            return Color3::new(normal.x, normal.y, normal.z);
+    fn ray_color(&self, ray: Ray, objects: &HittableList, depth: usize) -> Color3 {
+        if depth <= 0 {
+            return Color3::zero();
+        }
+
+        if let Some(hit_record) = objects.hit(&ray, Interval::new(0.001, f64::MAX)) {
+            let bounce_direction = Vec3::random_on_hemisphere(hit_record.normal);
+            return 0.5
+                * self.ray_color(Ray::new(hit_record.p, bounce_direction), objects, depth - 1);
         }
 
         let unit_direction = ray.dir.unit();
