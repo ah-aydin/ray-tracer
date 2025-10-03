@@ -5,6 +5,7 @@ pub struct Interval {
 
 impl Interval {
     pub fn new(min: f64, max: f64) -> Interval {
+        assert!(min < max);
         Interval { min, max }
     }
 
@@ -14,5 +15,9 @@ impl Interval {
 
     pub fn surrounds(&self, x: f64) -> bool {
         self.min < x && x < self.max
+    }
+
+    pub fn clamp(&self, x: f64) -> f64 {
+        x.max(self.min).min(self.max)
     }
 }

@@ -1,11 +1,18 @@
+use lazy_static::lazy_static;
 use std::fmt::Display;
 use std::ops::Add;
 use std::ops::Div;
 use std::ops::Mul;
 use std::ops::Sub;
 
+use crate::interval::Interval;
+
 pub type Point3 = Vec3;
 pub type Color3 = Vec3;
+
+lazy_static! {
+    static ref INTENSITY: Interval = Interval::new(0.0, 0.999);
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct Vec3 {
@@ -54,11 +61,12 @@ impl Vec3 {
 
 impl Color3 {
     pub fn write(&self, output: &mut String) {
+        let rbyte = INTENSITY.clamp(self.x) * 256.0;
+        let gbyte = INTENSITY.clamp(self.y) * 256.0;
+        let bbyte = INTENSITY.clamp(self.z) * 256.0;
         output.push_str(&format!(
             "{} {} {}\n",
-            (self.x * 255.0) as usize,
-            (self.y * 255.0) as usize,
-            (self.z * 255.0) as usize
+            rbyte as usize, gbyte as usize, bbyte as usize
         ));
     }
 }

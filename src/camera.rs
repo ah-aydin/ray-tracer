@@ -4,7 +4,10 @@ use std::io::Write;
 use crate::hittable::HittableList;
 use crate::interval::Interval;
 use crate::ray::Ray;
-use crate::vec::{Color3, Point3, Vec3};
+use crate::utils::random_percentage;
+use crate::vec::Color3;
+use crate::vec::Point3;
+use crate::vec::Vec3;
 
 pub struct Camera {
     image_width: usize,
@@ -13,10 +16,12 @@ pub struct Camera {
     pixel00_loc: Point3,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
+    samples_per_pixel: usize,
+    pixel_sample_scale: f64,
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: usize) -> Camera {
+    pub fn new(aspect_ratio: f64, image_width: usize, samples_per_pixel: usize) -> Camera {
         let image_height = ((image_width as f64 / aspect_ratio) as usize).max(1);
         let aspect_ratio = image_width as f64 / image_height as f64;
 
@@ -46,6 +51,8 @@ impl Camera {
             pixel00_loc,
             pixel_delta_u,
             pixel_delta_v,
+            samples_per_pixel,
+            pixel_sample_scale: 1.0 / (samples_per_pixel as f64),
         }
     }
 
@@ -59,13 +66,12 @@ impl Camera {
 
         for j in 0..self.image_height {
             for i in 0..self.image_width {
-                let pixel_center = self.pixel00_loc
-                    + (i as f64 * self.pixel_delta_u)
-                    + (j as f64 * self.pixel_delta_v);
-                let ray_direction = pixel_center - self.center;
-                let ray = Ray::new(self.center, ray_direction);
-
-                let pixel_color = self.ray_color(&ray, &objects);
+                let mut pixel_color = Color3::zero();
+                for _ in 0..self.samples_per_pixel {
+                    let ray = self.get_ray(i, j);
+                    pixel_color = pixel_color + self.ray_color(&ray, &objects);
+                }
+                pixel_color = pixel_color * self.pixel_sample_scale;
                 pixel_color.write(&mut image_data);
             }
         }
@@ -74,6 +80,17 @@ impl Camera {
         file.write(image_data.as_bytes())
             .expect("Failed while writing to file");
         println!("Done");
+    }
+
+    /// Construct a camera ray originating from the origin and directed at randomly sampled
+    /// point around the pixel location i, j.
+    fn get_ray(&self, i: usize, j: usize) -> Ray {
+        let offset = Vec3::new(random_percentage() - 0.5, random_percentage() - 0.5, 0.0);
+        let pixel_center = self.pixel00_loc
+            + ((i as f64 + offset.x) * self.pixel_delta_u)
+            + ((j as f64 + offset.y) * self.pixel_delta_v);
+        let ray_direction = pixel_center - self.center;
+        Ray::new(self.center, ray_direction)
     }
 
     fn ray_color(&self, ray: &Ray, objects: &HittableList) -> Color3 {
