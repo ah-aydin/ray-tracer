@@ -27,13 +27,16 @@ impl Camera {
         image_width: usize,
         samples_per_pixel: usize,
         max_depth: usize,
+        vfov: f64,
     ) -> Camera {
         let image_height = ((image_width as f64 / aspect_ratio) as usize).max(1);
         let aspect_ratio = image_width as f64 / image_height as f64;
 
         // Camera
         let focal_length: f64 = 1.0;
-        let viewport_height: f64 = 2.0;
+        let theta = vfov.to_radians();
+        let h = (theta / 2.0).tan();
+        let viewport_height: f64 = 2.0 * h * focal_length;
         let viewport_width = viewport_height * aspect_ratio;
         let center = Point3::zero();
 
