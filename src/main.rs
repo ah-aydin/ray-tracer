@@ -7,7 +7,6 @@ mod sphere;
 mod utils;
 mod vec;
 
-use std::f64::consts::PI;
 use std::rc::Rc;
 
 use hittable::HittableList;
