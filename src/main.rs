@@ -26,7 +26,7 @@ fn main() {
     // Image
     let aspect_ratio: f64 = 16.0 / 9.0;
     let image_width: usize = 1920;
-    let samples_per_pixel: usize = 100; // Number of samples which will be used for aliasing
+    let samples_per_pixel: usize = 500; // Number of samples which will be used for aliasing
     let max_depth = 50; // Maximum number of times a ray will bounce
     let vfov = 20.0;
     let camera = Arc::new(Camera::new(
