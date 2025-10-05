@@ -7,7 +7,7 @@ mod sphere;
 mod utils;
 mod vec;
 
-use std::rc::Rc;
+use std::sync::Arc;
 
 use hittable::HittableList;
 use sphere::Sphere;
@@ -29,7 +29,7 @@ fn main() {
     let samples_per_pixel: usize = 100; // Number of samples which will be used for aliasing
     let max_depth = 50; // Maximum number of times a ray will bounce
     let vfov = 20.0;
-    let camera = Camera::new(
+    let camera = Arc::new(Camera::new(
         aspect_ratio,
         image_width,
         samples_per_pixel,
@@ -40,11 +40,11 @@ fn main() {
         Vec3::new(0.0, 1.0, 0.0),
         0.0,
         3.4,
-    );
+    ));
 
     let mut world = HittableList::new();
 
-    let m_ground = Rc::new(Lambertian::new(Color3::new(0.5, 0.5, 0.5)));
+    let m_ground = Arc::new(Lambertian::new(Color3::new(0.5, 0.5, 0.5)));
     world.add(Sphere::new(
         Point3::new(0.0, -1000.0, 0.0),
         1000.0,
@@ -66,18 +66,18 @@ fn main() {
                 if m < 0.8 {
                     // diffuse
                     let albedo = Color3::random() * Color3::random();
-                    let mat = Rc::new(Lambertian::new(albedo));
+                    let mat = Arc::new(Lambertian::new(albedo));
                     world.add(Sphere::new(center, 0.2, mat));
                 } else if m < 0.95 {
                     // metal
                     let r = random_f64(0.5, 1.0);
                     let albedo = Color3::new(r, r, r);
                     let fuzz = random_f64(0.0, 0.5);
-                    let mat = Rc::new(Metal::new(albedo, fuzz));
+                    let mat = Arc::new(Metal::new(albedo, fuzz));
                     world.add(Sphere::new(center, 0.2, mat));
                 } else {
                     // glass
-                    let mat = Rc::new(Dielectric::new(1.5));
+                    let mat = Arc::new(Dielectric::new(1.5));
                     world.add(Sphere::new(center, 0.2, mat));
                 }
             }

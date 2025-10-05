@@ -20,7 +20,7 @@ impl ScatterRecord {
     }
 }
 
-pub trait Material: Debug {
+pub trait Material: Debug + Send + Sync {
     fn scatter(&self, _ray_in: &Ray, _hit_record: &HitRecord) -> Option<ScatterRecord> {
         None
     }

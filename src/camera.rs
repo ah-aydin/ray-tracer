@@ -1,5 +1,7 @@
 use std::fs::File;
 use std::io::Write;
+use std::sync::Arc;
+use std::thread;
 
 use crate::hittable::HittableList;
 use crate::interval::Interval;
@@ -85,7 +87,7 @@ impl Camera {
         }
     }
 
-    pub fn render(&self, objects: HittableList) {
+    pub fn render(self: Arc<Self>, objects: HittableList) {
         println!("Writing image to file");
         let mut image_data = String::new();
         image_data.push_str(&format!(
@@ -93,16 +95,45 @@ impl Camera {
             self.image_width, self.image_height
         ));
 
-        for j in 0..self.image_height {
-            for i in 0..self.image_width {
-                let mut pixel_color = Color3::zero();
-                for _ in 0..self.samples_per_pixel {
-                    let ray = self.get_ray(i, j);
-                    pixel_color = pixel_color + self.ray_color(ray, &objects, self.max_depth);
+        let thread_count = num_cpus::get();
+        let batch_size = self.image_height / thread_count;
+        let last_batch_size = self.image_height - batch_size * (thread_count - 1);
+
+        let objects = Arc::new(objects);
+
+        let mut thread_handles = Vec::new();
+        for t in 0..thread_count {
+            let batch_start = t * batch_size;
+            let batch_end = if t == thread_count - 1 {
+                batch_start + last_batch_size
+            } else {
+                batch_start + batch_size
+            };
+
+            let s = Arc::clone(&self);
+            let objects = Arc::clone(&objects);
+            let handle = thread::spawn(move || {
+                let mut image_data = String::new();
+                for j in batch_start..batch_end {
+                    for i in 0..s.image_width {
+                        let mut pixel_color = Color3::zero();
+                        for _ in 0..s.samples_per_pixel {
+                            let ray = s.get_ray(i, j);
+                            pixel_color = pixel_color + s.ray_color(ray, &objects, s.max_depth);
+                        }
+                        pixel_color = pixel_color * s.pixel_sample_scale;
+                        pixel_color.write(&mut image_data);
+                    }
                 }
-                pixel_color = pixel_color * self.pixel_sample_scale;
-                pixel_color.write(&mut image_data);
-            }
+                image_data
+            });
+
+            thread_handles.push(handle);
+        }
+
+        for th in thread_handles {
+            let thread_data = th.join().unwrap();
+            image_data.push_str(&thread_data);
         }
 
         let mut file = File::create("image.ppm").expect("Failed to open image file");

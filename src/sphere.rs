@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::hittable::HitRecord;
 use crate::hittable::Hittable;
@@ -11,11 +11,11 @@ use crate::vec::Point3;
 pub struct Sphere {
     center: Point3,
     radius: f64,
-    material: Rc<dyn Material>,
+    material: Arc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64, material: Rc<dyn Material>) -> Self {
+    pub fn new(center: Point3, radius: f64, material: Arc<dyn Material>) -> Self {
         assert!(radius >= 0.0);
         Self {
             center,
@@ -77,7 +77,7 @@ impl Hittable for Sphere {
             hit_point,
             normal,
             ray,
-            Rc::clone(&self.material),
+            Arc::clone(&self.material),
             root,
         ))
     }
