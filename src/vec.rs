@@ -72,6 +72,15 @@ impl Vec3 {
         Vec3::zero() - on_unit_sphere
     }
 
+    pub fn random_in_unit_disk() -> Self {
+        loop {
+            let p = Vec3::new(random_f64(-1.0, 1.0), random_f64(-1.0, 1.0), 0.0);
+            if p.squared_length() < 1.0 {
+                return p;
+            }
+        }
+    }
+
     pub fn reflect(vec: &Vec3, normal: &Vec3) -> Self {
         (*vec) - 2.0 * vec.dot(normal) * (*normal)
     }
