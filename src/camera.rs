@@ -101,16 +101,20 @@ impl Camera {
     }
 
     fn ray_color(&self, ray: Ray, objects: &HittableList, depth: usize) -> Color3 {
+        // Bounce limit exceeded
         if depth <= 0 {
             return Color3::zero();
         }
 
         if let Some(hit_record) = objects.hit(&ray, Interval::new(0.001, f64::MAX)) {
-            let bounce_direction = Vec3::random_on_hemisphere(hit_record.normal);
-            return 0.5
-                * self.ray_color(Ray::new(hit_record.p, bounce_direction), objects, depth - 1);
+            if let Some(scatter_record) = hit_record.material.scatter(&ray, &hit_record) {
+                return scatter_record.attenuation
+                    * self.ray_color(scatter_record.scattered, objects, depth - 1);
+            }
+            return Color3::zero();
         }
 
+        // Color of the sky
         let unit_direction = ray.dir.unit();
         let a = 0.5 * (unit_direction.y + 1.0);
         (1.0 - a) * Color3::new(1.0, 1.0, 1.0) + a * Color3::new(0.5, 0.7, 1.0)

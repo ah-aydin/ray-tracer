@@ -1,4 +1,7 @@
+use std::rc::Rc;
+
 use crate::interval::Interval;
+use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec::Point3;
 use crate::vec::Vec3;
@@ -7,16 +10,24 @@ use crate::vec::Vec3;
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
+    pub material: Rc<dyn Material>,
     pub t: f64,
     pub is_front_face: bool,
 }
 
 impl HitRecord {
     /// `outward_normal` must be a unit vector
-    pub fn new(p: Point3, outward_normal: Vec3, ray: &Ray, t: f64) -> Self {
+    pub fn new(
+        p: Point3,
+        outward_normal: Vec3,
+        ray: &Ray,
+        material: Rc<dyn Material>,
+        t: f64,
+    ) -> Self {
         Self {
             p,
             normal: outward_normal,
+            material,
             t,
             is_front_face: ray.dir.dot(&outward_normal) < 0.0,
         }

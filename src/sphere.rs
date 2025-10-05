@@ -1,19 +1,27 @@
+use std::rc::Rc;
+
 use crate::hittable::HitRecord;
 use crate::hittable::Hittable;
 use crate::interval::Interval;
+use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec::Point3;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Sphere {
     center: Point3,
     radius: f64,
+    material: Rc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64) -> Self {
+    pub fn new(center: Point3, radius: f64, material: Rc<dyn Material>) -> Self {
         assert!(radius >= 0.0);
-        Self { center, radius }
+        Self {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
@@ -64,7 +72,13 @@ impl Hittable for Sphere {
 
         let hit_point = ray.at(root);
         // This normal will always point outward
-        let normal = (hit_point - self.center) / self.radius; // division by radius will give us will make it a unit vector
-        Some(HitRecord::new(hit_point, normal, ray, root))
+        let normal = (hit_point - self.center) / self.radius; // division by radius will make it a unit vector
+        Some(HitRecord::new(
+            hit_point,
+            normal,
+            ray,
+            Rc::clone(&self.material),
+            root,
+        ))
     }
 }

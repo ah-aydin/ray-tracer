@@ -72,6 +72,10 @@ impl Vec3 {
         Vec3::zero() - on_unit_sphere
     }
 
+    pub fn reflect(vec: &Vec3, normal: &Vec3) -> Self {
+        (*vec) - 2.0 * vec.dot(normal) * (*normal)
+    }
+
     pub fn length(&self) -> f64 {
         self.squared_length().sqrt()
     }
@@ -95,13 +99,29 @@ impl Vec3 {
     pub fn unit(&self) -> Self {
         *self / self.length()
     }
+
+    pub fn near_zero(&self) -> bool {
+        let s = 1e-8;
+        self.x.abs() < s && self.y.abs() < s && self.z.abs() < s
+    }
 }
 
 impl Color3 {
     pub fn write(&self, output: &mut String) {
-        let rbyte = INTENSITY.clamp(self.x) * 256.0;
-        let gbyte = INTENSITY.clamp(self.y) * 256.0;
-        let bbyte = INTENSITY.clamp(self.z) * 256.0;
+        fn linear_to_gamma(linear_component: f64) -> f64 {
+            if linear_component > 0.0 {
+                return linear_component.sqrt();
+            }
+            0.0
+        }
+
+        let r = linear_to_gamma(self.x);
+        let g = linear_to_gamma(self.y);
+        let b = linear_to_gamma(self.z);
+
+        let rbyte = INTENSITY.clamp(r) * 256.0;
+        let gbyte = INTENSITY.clamp(g) * 256.0;
+        let bbyte = INTENSITY.clamp(b) * 256.0;
         output.push_str(&format!(
             "{} {} {}\n",
             rbyte as usize, gbyte as usize, bbyte as usize
