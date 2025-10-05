@@ -52,17 +52,24 @@ impl Material for Lambertian {
 #[derive(Debug)]
 pub struct Metal {
     albedo: Color3,
+    fuzz: f64,
 }
 
 impl Metal {
-    pub fn new(albedo: Color3) -> Self {
-        Self { albedo }
+    pub fn new(albedo: Color3, fuzz: f64) -> Self {
+        assert!(fuzz >= 0.0);
+        Self { albedo, fuzz }
     }
 }
 
 impl Material for Metal {
     fn scatter(&self, ray_in: &Ray, hit_record: &HitRecord) -> Option<ScatterRecord> {
-        let reflected = Vec3::reflect(&ray_in.dir, &hit_record.normal);
+        let mut reflected = Vec3::reflect(&ray_in.dir, &hit_record.normal).unit();
+
+        if self.fuzz > 0.0 {
+            reflected = reflected + self.fuzz * Vec3::random_unit();
+        }
+
         let scattered = Ray::new(hit_record.p, reflected);
         Some(ScatterRecord::new(scattered, self.albedo))
     }
