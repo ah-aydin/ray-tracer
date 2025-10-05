@@ -76,6 +76,13 @@ impl Vec3 {
         (*vec) - 2.0 * vec.dot(normal) * (*normal)
     }
 
+    pub fn refract(uv: &Vec3, normal: &Vec3, etai_over_etat: f64) -> Self {
+        let cos_theta = uv.negate().dot(&normal).min(1.0);
+        let r_out_perp = etai_over_etat * (*uv + cos_theta * *normal);
+        let r_out_parallel = -(1.0 - r_out_perp.squared_length()).abs().sqrt() * *normal;
+        r_out_perp + r_out_parallel
+    }
+
     pub fn length(&self) -> f64 {
         self.squared_length().sqrt()
     }
@@ -103,6 +110,14 @@ impl Vec3 {
     pub fn near_zero(&self) -> bool {
         let s = 1e-8;
         self.x.abs() < s && self.y.abs() < s && self.z.abs() < s
+    }
+
+    pub fn negate(&self) -> Self {
+        Self {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+        }
     }
 }
 
