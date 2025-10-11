@@ -9,7 +9,7 @@ use crate::vec::Point3;
 
 #[derive(Debug)]
 pub struct Sphere {
-    center: Point3,
+    center: Ray,
     radius: f64,
     material: Arc<dyn Material>,
 }
@@ -18,7 +18,23 @@ impl Sphere {
     pub fn new(center: Point3, radius: f64, material: Arc<dyn Material>) -> Self {
         assert!(radius >= 0.0);
         Self {
-            center,
+            center: Ray::new(center, Point3::zero()),
+            radius,
+            material,
+        }
+    }
+
+    /// `center`: The center of the sphere at time t=0
+    /// `target_center`: The center of the sphere are time t=1
+    pub fn new_moving(
+        center: Point3,
+        target_center: Point3,
+        radius: f64,
+        material: Arc<dyn Material>,
+    ) -> Self {
+        assert!(radius >= 0.0);
+        Self {
+            center: Ray::new(center, target_center - center),
             radius,
             material,
         }
@@ -54,7 +70,9 @@ impl Hittable for Sphere {
     /// - If there is 1 root, then the ray is a tangent to the surface of the sphere
     /// - If there are 2 roots, then the ray passes through the sphere
     fn hit(&self, ray: &Ray, ray_t: Interval) -> Option<HitRecord> {
-        let oc = self.center - ray.origin;
+        let current_center = self.center.at(ray.tm); // Get the current center of the shpere given ray position
+
+        let oc = current_center - ray.origin;
         let a = ray.dir.squared_length(); // Squared length of a vector is the dot procut between a vector and itself
         // let b = -(2.0 * ray.dir.dot(&oc));
         let h = ray.dir.dot(&oc); // b = -2h to simply the formula for `discriminant`
@@ -72,7 +90,7 @@ impl Hittable for Sphere {
 
         let hit_point = ray.at(root);
         // This normal will always point outward
-        let normal = (hit_point - self.center) / self.radius; // division by radius will make it a unit vector
+        let normal = (hit_point - current_center) / self.radius; // division by radius will make it a unit vector
         Some(HitRecord::new(
             hit_point,
             normal,

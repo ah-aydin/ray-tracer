@@ -1,5 +1,6 @@
 use rand::Rng;
 
+/// Returns a value between 0.0 and 1.0
 pub fn random_percentage() -> f64 {
     let mut rng = rand::rng();
     rng.random()

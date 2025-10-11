@@ -25,23 +25,26 @@ use crate::vec::Vec3;
 fn main() {
     // Image
     let aspect_ratio: f64 = 16.0 / 9.0;
-    let image_width: usize = 1920;
-    let samples_per_pixel: usize = 500; // Number of samples which will be used for aliasing
+    let image_width: usize = 1280;
+    let samples_per_pixel: usize = 256; // Number of samples which will be used for aliasing
     let max_depth = 50; // Maximum number of times a ray will bounce
     let vfov = 20.0;
+    let look_from = Point3::new(13.0, 2.0, 3.0);
+    let look_at = Point3::new(0.0, 0.0, 0.0);
+    let defocus_angle = 0.6;
+    let focus_dist = 10.0;
     let camera = Arc::new(Camera::new(
         aspect_ratio,
         image_width,
         samples_per_pixel,
         max_depth,
         vfov,
-        Point3::new(13.0, 2.0, 3.0),
-        Point3::new(0.0, 0.0, 0.0),
+        look_from,
+        look_at,
         Vec3::new(0.0, 1.0, 0.0),
-        // 0.0,
-        0.6,
-        // 3.4,
-        10.0,
+        defocus_angle,
+        focus_dist,
+        true,
     ));
 
     let mut world = HittableList::new();
@@ -66,10 +69,12 @@ fn main() {
 
             if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
                 if m < 0.8 {
+                    // Make it bounce at time t=1
+                    let center_t1 = center + Point3::new(0.0, random_percentage() * 0.5, 0.0);
                     // diffuse
                     let albedo = Color3::random() * Color3::random();
                     let mat = Arc::new(Lambertian::new(albedo));
-                    world.add(Sphere::new(center, 0.2, mat));
+                    world.add(Sphere::new_moving(center, center_t1, 0.2, mat));
                 } else if m < 0.95 {
                     // metal
                     let r = random_f64(0.5, 1.0);
@@ -85,6 +90,14 @@ fn main() {
             }
         }
     }
+    let material1 = Arc::new(Dielectric::new(1.5));
+    world.add(Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, material1));
+
+    let material2 = Arc::new(Lambertian::new(Color3::new(0.4, 0.2, 0.1)));
+    world.add(Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, material2));
+
+    let material3 = Arc::new(Metal::new(Color3::new(0.7, 0.6, 0.5), 0.0));
+    world.add(Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, material3));
 
     camera.render(world);
 }

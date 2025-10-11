@@ -24,6 +24,7 @@ pub struct Camera {
     defocus_angle: f64,   // Varaition angle of rays through each pixel
     defocus_disk_u: Vec3, // Defocus disk horizontal radius
     defocus_disk_v: Vec3, // Defocus disk vertical radius
+    enable_motion_blur: bool,
 }
 
 impl Camera {
@@ -38,6 +39,7 @@ impl Camera {
         v_up: Vec3,        // Camera relative "up" direction
         defocus_angle: f64,
         focus_dist: f64, // Distance from camera lookfrom point to plane of perfect focus
+        enable_motion_blur: bool,
     ) -> Camera {
         let image_height = ((image_width as f64 / aspect_ratio) as usize).max(1);
         let aspect_ratio = image_width as f64 / image_height as f64;
@@ -84,6 +86,7 @@ impl Camera {
             defocus_angle,
             defocus_disk_u,
             defocus_disk_v,
+            enable_motion_blur,
         }
     }
 
@@ -159,7 +162,11 @@ impl Camera {
         };
 
         let ray_direction = pixel_center - ray_origin;
-        Ray::new(ray_origin, ray_direction)
+        if self.enable_motion_blur {
+            Ray::new_time(ray_origin, ray_direction, random_percentage())
+        } else {
+            Ray::new(ray_origin, ray_direction)
+        }
     }
 
     fn ray_color(&self, ray: Ray, objects: &HittableList, depth: usize) -> Color3 {
