@@ -38,8 +38,10 @@ fn main() {
         Point3::new(13.0, 2.0, 3.0),
         Point3::new(0.0, 0.0, 0.0),
         Vec3::new(0.0, 1.0, 0.0),
-        0.0,
-        3.4,
+        // 0.0,
+        0.6,
+        // 3.4,
+        10.0,
     ));
 
     let mut world = HittableList::new();

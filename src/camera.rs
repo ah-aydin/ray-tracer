@@ -95,7 +95,7 @@ impl Camera {
             self.image_width, self.image_height
         ));
 
-        let thread_count = num_cpus::get();
+        let thread_count = num_cpus::get().saturating_sub(4).max(1); // Using only 20 cores out of 24 that I have
         let batch_size = self.image_height / thread_count;
         let last_batch_size = self.image_height - batch_size * (thread_count - 1);
 
@@ -159,7 +159,7 @@ impl Camera {
         };
 
         let ray_direction = pixel_center - ray_origin;
-        Ray::new(self.center, ray_direction)
+        Ray::new(ray_origin, ray_direction)
     }
 
     fn ray_color(&self, ray: Ray, objects: &HittableList, depth: usize) -> Color3 {
