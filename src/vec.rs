@@ -2,6 +2,7 @@ use lazy_static::lazy_static;
 use std::fmt::Display;
 use std::ops::Add;
 use std::ops::Div;
+use std::ops::Index;
 use std::ops::Mul;
 use std::ops::Sub;
 
@@ -221,6 +222,20 @@ impl Div<f64> for Vec3 {
             x: self.x / rhs,
             y: self.y / rhs,
             z: self.z / rhs,
+        }
+    }
+}
+
+impl Index<usize> for Vec3 {
+    type Output = f64;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        assert!(index < 3);
+        match index {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            _ => unreachable!("You're living in a higher dimention"),
         }
     }
 }
