@@ -3,6 +3,7 @@ use std::io::Write;
 use std::sync::Arc;
 use std::thread;
 
+use crate::hittable::Hittable;
 use crate::hittable::HittableList;
 use crate::interval::Interval;
 use crate::ray::Ray;
@@ -90,7 +91,7 @@ impl Camera {
         }
     }
 
-    pub fn render(self: Arc<Self>, objects: HittableList) {
+    pub fn render(self: Arc<Self>, objects: Arc<dyn Hittable>) {
         println!("Writing image to file");
         let mut image_data = String::new();
         image_data.push_str(&format!(
@@ -101,8 +102,6 @@ impl Camera {
         let thread_count = num_cpus::get().saturating_sub(4).max(1); // Using only 20 cores out of 24 that I have
         let batch_size = self.image_height / thread_count;
         let last_batch_size = self.image_height - batch_size * (thread_count - 1);
-
-        let objects = Arc::new(objects);
 
         let mut thread_handles = Vec::new();
         for t in 0..thread_count {
@@ -122,7 +121,8 @@ impl Camera {
                         let mut pixel_color = Color3::zero();
                         for _ in 0..s.samples_per_pixel {
                             let ray = s.get_ray(i, j);
-                            pixel_color = pixel_color + s.ray_color(ray, &objects, s.max_depth);
+                            pixel_color =
+                                pixel_color + s.ray_color(ray, Arc::clone(&objects), s.max_depth);
                         }
                         pixel_color = pixel_color * s.pixel_sample_scale;
                         pixel_color.write(&mut image_data);
@@ -169,7 +169,7 @@ impl Camera {
         }
     }
 
-    fn ray_color(&self, ray: Ray, objects: &HittableList, depth: usize) -> Color3 {
+    fn ray_color(&self, ray: Ray, objects: Arc<dyn Hittable>, depth: usize) -> Color3 {
         // Bounce limit exceeded
         if depth <= 0 {
             return Color3::zero();

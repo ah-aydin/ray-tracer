@@ -3,6 +3,7 @@ use crate::ray::Ray;
 use crate::vec::Point3;
 
 /// Axis-Aligned Bounding Box
+#[derive(Debug)]
 pub struct AABB {
     x: Interval,
     y: Interval,
@@ -44,8 +45,8 @@ impl AABB {
         }
     }
 
-    pub fn hit(&self, ray: &Ray, ray_t: Interval) -> bool {
-        let mut ray_t = ray_t;
+    pub fn hit(&self, ray: &Ray, ray_t: &Interval) -> bool {
+        let mut ray_t = ray_t.clone();
         let ray_origin = ray.origin;
         let ray_dir = ray.dir;
 
@@ -78,5 +79,13 @@ impl AABB {
         }
 
         true
+    }
+
+    pub fn from_boxes(box1: &AABB, box2: &AABB) -> AABB {
+        AABB {
+            x: Interval::from_intervals(&box1.x, &box2.x),
+            y: Interval::from_intervals(&box1.y, &box2.y),
+            z: Interval::from_intervals(&box1.z, &box2.z),
+        }
     }
 }

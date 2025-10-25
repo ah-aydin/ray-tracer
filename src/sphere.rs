@@ -1,26 +1,31 @@
 use std::sync::Arc;
 
+use crate::aabb::AABB;
 use crate::hittable::HitRecord;
 use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec::Point3;
+use crate::vec::Vec3;
 
 #[derive(Debug)]
 pub struct Sphere {
     center: Ray,
     radius: f64,
     material: Arc<dyn Material>,
+    bbox: AABB,
 }
 
 impl Sphere {
     pub fn new(center: Point3, radius: f64, material: Arc<dyn Material>) -> Self {
         assert!(radius >= 0.0);
+        let rvec = Vec3::new(radius, radius, radius);
         Self {
             center: Ray::new(center, Point3::zero()),
             radius,
             material,
+            bbox: AABB::from_points(center - rvec, center + rvec),
         }
     }
 
@@ -33,10 +38,14 @@ impl Sphere {
         material: Arc<dyn Material>,
     ) -> Self {
         assert!(radius >= 0.0);
+        let rvec = Vec3::new(radius, radius, radius);
+        let box1 = AABB::from_points(center - rvec, center + rvec);
+        let box2 = AABB::from_points(target_center - rvec, target_center + rvec);
         Self {
             center: Ray::new(center, target_center - center),
             radius,
             material,
+            bbox: AABB::from_boxes(&box1, &box2),
         }
     }
 }
@@ -98,5 +107,9 @@ impl Hittable for Sphere {
             Arc::clone(&self.material),
             root,
         ))
+    }
+
+    fn boundnig_box(&self) -> &AABB {
+        &self.bbox
     }
 }

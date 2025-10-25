@@ -1,4 +1,5 @@
 mod aabb;
+mod bvh;
 mod camera;
 mod hittable;
 mod interval;
@@ -13,6 +14,7 @@ use std::sync::Arc;
 use hittable::HittableList;
 use sphere::Sphere;
 
+use crate::bvh::BVHNode;
 use crate::camera::Camera;
 use crate::material::Dielectric;
 use crate::material::Lambertian;
@@ -71,7 +73,7 @@ fn main() {
             if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
                 if m < 0.8 {
                     // Make it bounce at time t=1
-                    let center_t1 = center + Point3::new(0.0, random_percentage() * 0.5, 0.0);
+                    let center_t1 = center + Point3::new(0.0, random_percentage() * 0.2, 0.0);
                     // diffuse
                     let albedo = Color3::random() * Color3::random();
                     let mat = Arc::new(Lambertian::new(albedo));
@@ -100,5 +102,8 @@ fn main() {
     let material3 = Arc::new(Metal::new(Color3::new(0.7, 0.6, 0.5), 0.0));
     world.add(Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, material3));
 
-    camera.render(world);
+    let bvh_root = BVHNode::new(&mut world);
+
+    // camera.render(Arc::new(world));
+    camera.render(Arc::new(bvh_root));
 }
