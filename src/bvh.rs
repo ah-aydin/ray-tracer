@@ -42,7 +42,12 @@ impl BVHNode {
     }
 
     fn new_span(objects: &mut Vec<Arc<dyn Hittable>>, start: usize, end: usize) -> BVHNode {
-        let comparator: BoxCompareFn = match random_u64(0, 2) {
+        let mut bbox = AABB::empty();
+        objects
+            .iter()
+            .for_each(|object| bbox = AABB::from_boxes(&bbox, object.boundnig_box()));
+
+        let comparator: BoxCompareFn = match bbox.longest_axis() {
             0 => box_compare_x,
             1 => box_compare_y,
             2 => box_compare_z,
@@ -72,11 +77,7 @@ impl BVHNode {
             right = Arc::new(BVHNode::new_span(objects, mid, end));
         }
 
-        BVHNode {
-            bbox: AABB::from_boxes(left.boundnig_box(), right.boundnig_box()),
-            left,
-            right,
-        }
+        BVHNode { bbox, left, right }
     }
 }
 

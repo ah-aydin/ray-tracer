@@ -17,6 +17,10 @@ impl Interval {
         Interval { min, max }
     }
 
+    pub fn empty() -> Interval {
+        Interval { min: 0.0, max: 0.0 }
+    }
+
     pub fn expand(&self, delta: f64) -> Interval {
         let padding = delta / 2.0;
         Interval {
@@ -31,5 +35,9 @@ impl Interval {
 
     pub fn clamp(&self, x: f64) -> f64 {
         x.max(self.min).min(self.max)
+    }
+
+    pub fn size(&self) -> f64 {
+        self.max - self.min
     }
 }

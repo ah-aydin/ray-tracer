@@ -104,6 +104,5 @@ fn main() {
 
     let bvh_root = BVHNode::new(&mut world);
 
-    // camera.render(Arc::new(world));
     camera.render(Arc::new(bvh_root));
 }

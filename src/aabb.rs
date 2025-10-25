@@ -36,6 +36,22 @@ impl AABB {
         }
     }
 
+    pub fn from_boxes(box1: &AABB, box2: &AABB) -> Self {
+        Self {
+            x: Interval::from_intervals(&box1.x, &box2.x),
+            y: Interval::from_intervals(&box1.y, &box2.y),
+            z: Interval::from_intervals(&box1.z, &box2.z),
+        }
+    }
+
+    pub fn empty() -> Self {
+        Self {
+            x: Interval::empty(),
+            y: Interval::empty(),
+            z: Interval::empty(),
+        }
+    }
+
     pub fn axis_interval(&self, n: usize) -> &Interval {
         match n {
             0 => &self.x,
@@ -81,11 +97,16 @@ impl AABB {
         true
     }
 
-    pub fn from_boxes(box1: &AABB, box2: &AABB) -> AABB {
-        AABB {
-            x: Interval::from_intervals(&box1.x, &box2.x),
-            y: Interval::from_intervals(&box1.y, &box2.y),
-            z: Interval::from_intervals(&box1.z, &box2.z),
+    pub fn longest_axis(&self) -> usize {
+        if self.x.size() > self.y.size() {
+            if self.x.size() > self.z.size() {
+                return 0;
+            }
+            return 2;
+        } else if self.y.size() > self.z.size() {
+            return 1;
+        } else {
+            return 2;
         }
     }
 }
