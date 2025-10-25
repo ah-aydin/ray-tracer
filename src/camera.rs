@@ -122,7 +122,7 @@ impl Camera {
                         for _ in 0..s.samples_per_pixel {
                             let ray = s.get_ray(i, j);
                             pixel_color =
-                                pixel_color + s.ray_color(ray, Arc::clone(&objects), s.max_depth);
+                                pixel_color + s.ray_color(ray, objects.as_ref(), s.max_depth);
                         }
                         pixel_color = pixel_color * s.pixel_sample_scale;
                         pixel_color.write(&mut image_data);
@@ -169,7 +169,7 @@ impl Camera {
         }
     }
 
-    fn ray_color(&self, ray: Ray, objects: Arc<dyn Hittable>, depth: usize) -> Color3 {
+    fn ray_color(&self, ray: Ray, objects: &dyn Hittable, depth: usize) -> Color3 {
         // Bounce limit exceeded
         if depth <= 0 {
             return Color3::zero();
