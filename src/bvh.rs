@@ -6,7 +6,6 @@ use crate::hittable::Hittable;
 use crate::hittable::HittableList;
 use crate::interval::Interval;
 use crate::ray::Ray;
-use crate::utils::random_u64;
 
 type BoxCompareFn = fn(&dyn Hittable, &dyn Hittable) -> bool;
 

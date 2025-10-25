@@ -38,6 +38,30 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
+    /// ## Math
+    /// ### Concept
+    /// Diffuse (Lambertian) surfaces scatter light uniformly in all directions.
+    /// Instead of reflecting rays in a mirror-like way, they bounce light randomly
+    /// from the hit point within a unit hemisphere oriented by the surface normal.
+    ///
+    /// ### Variables
+    /// - `N` → surface normal at the hit point
+    /// - `P` → hit point
+    /// - `d` → random unit vector (representing diffuse scatter direction)
+    ///
+    /// ### Calculation
+    /// The scattered ray direction is chosen as:
+    /// `scatter_direction = N + random_unit_vector()`
+    ///
+    /// This randomizes direction within the hemisphere of the normal,
+    /// producing the classic "matte" appearance.
+    ///
+    /// If the result is near zero (numerically unstable), the normal itself is used
+    /// as the direction to avoid degenerate vectors.
+    ///
+    /// ### Outcome
+    /// - `attenuation` = surface color (albedo)
+    /// - `scattered` = ray starting at `P` with direction `scatter_direction`
     fn scatter(&self, ray_in: &Ray, hit_record: &HitRecord) -> Option<ScatterRecord> {
         let mut scatter_direction = hit_record.normal + Vec3::random_unit();
 
@@ -65,6 +89,30 @@ impl Metal {
 }
 
 impl Material for Metal {
+    /// ## Math
+    /// ### Concept
+    /// Metallic surfaces reflect rays according to the law of reflection,
+    /// with an optional "fuzz" factor that blurs the reflection.
+    ///
+    /// ### Variables
+    /// - `v` → incoming ray direction
+    /// - `N` → surface normal
+    /// - `r` → reflected direction
+    /// - `fuzz` → controls the deviation from perfect reflection (0 = mirror)
+    ///
+    /// ### Calculation
+    /// Perfect reflection direction:
+    /// `r = v - 2 * (v ⋅ N) * N`
+    ///
+    /// If `fuzz > 0`, add a small random perturbation within a unit sphere:
+    /// `r = r + fuzz * random_unit_vector()`
+    ///
+    /// The result is a slightly blurred reflection depending on the fuzz value.
+    ///
+    /// ### Outcome
+    /// - `attenuation` = surface color (albedo)
+    /// - `scattered` = ray starting at hit point, moving in `r`
+    /// - The material does not absorb light; it reflects it directionally.
     fn scatter(&self, ray_in: &Ray, hit_record: &HitRecord) -> Option<ScatterRecord> {
         let mut reflected = Vec3::reflect(&ray_in.dir, &hit_record.normal).unit();
 
@@ -96,6 +144,36 @@ impl Dielectric {
 }
 
 impl Material for Dielectric {
+    /// ## Math
+    /// ### Concept
+    /// Dielectric materials (like glass or water) can both reflect and refract light.
+    /// Whether a ray reflects or refracts depends on the incident angle and the
+    /// material's index of refraction.
+    ///
+    /// ### Variables
+    /// - `n₁` → refractive index of the medium the ray comes from
+    /// - `n₂` → refractive index of the material
+    /// - `η` = `n₁ / n₂` → ratio of refractive indices
+    /// - `θᵢ` → incident angle
+    /// - `θₜ` → transmission (refraction) angle
+    /// - `cosθ` = `-v ⋅ N`
+    ///
+    /// ### Calculation
+    /// Using Snell's Law: `η * sinθᵢ = sinθₜ`
+    /// If `η * sinθᵢ > 1`, total internal reflection occurs (no refraction possible).
+    ///
+    /// Otherwise, we probabilistically choose reflection or refraction based on
+    /// **Schlick's approximation**:
+    /// `R(θ) ≈ R₀ + (1 - R₀) * (1 - cosθ)⁵`
+    /// where `R₀ = ((1 - n₂) / (1 + n₂))²`
+    ///
+    /// ### Outcome
+    /// - If total internal reflection or reflection probability `R(θ)` is high → reflect
+    /// - Otherwise → refract using Snell’s law
+    ///
+    /// In either case:
+    /// - `attenuation` = white (no absorption)
+    /// - `scattered` = new ray with reflected or refracted direction
     fn scatter(&self, ray_in: &Ray, hit_record: &HitRecord) -> Option<ScatterRecord> {
         let refraction_index = if hit_record.is_front_face {
             1.0 / self.refraction_index
